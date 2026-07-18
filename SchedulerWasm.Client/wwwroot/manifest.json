@@ -1,14 +1,30 @@
 {
   "name": "إدارة الدروس الخصوصية",
   "short_name": "الدروس",
-  "start_url": ".",
-  "display": "standalone",
-  "background_color": "#1a1a2e",
-  "theme_color": "#1a1a2e",
   "description": "منصة إدارة مواعيد الدروس الخصوصية",
+  "id": "/",
+  "start_url": ".",
+  "scope": "./",
+  "display": "standalone",
   "orientation": "portrait",
+  "background_color": "#1a1a2e",
+  "theme_color": "#6c5ce7",
+  "lang": "ar",
+  "dir": "rtl",
+  "categories": ["education", "productivity"],
+  "prefer_related_applications": false,
   "icons": [
-    { "src": "icon-192.svg", "sizes": "192x192", "type": "image/svg+xml" },
-    { "src": "icon-512.svg", "sizes": "512x512", "type": "image/svg+xml" }
+    {
+      "src": "icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
   ]
 }
