@@ -8,8 +8,18 @@ const PRECACHE = [
   './css/bootstrap.bundle.min.js',
   './_framework/blazor.webassembly.js',
   './manifest.json',
+  './icon-48.png',
+  './icon-72.png',
+  './icon-96.png',
+  './icon-144.png',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './icon-192-maskable.png',
+  './icon-512-maskable.png',
+  './icon-192-any.svg',
+  './icon-512-any.svg',
+  './icon-192-maskable.svg',
+  './icon-512-maskable.svg'
 ];
 
 self.addEventListener('install', e => {
