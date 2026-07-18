@@ -1,0 +1,50 @@
+@page "/lessons/add"
+@page "/lessons/edit/{Id:int}"
+@rendermode InteractiveWebAssembly
+@inject DataService Data
+@inject NavigationManager Nav
+
+<PageTitle>حصة</PageTitle>
+
+<div class="mb-4">
+    <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="lessons">الحصص</a></li><li class="breadcrumb-item active">@(IsEdit ? "تعديل" : "إضافة")</li></ol></nav>
+    <h3><i class="bi @(IsEdit ? "bi-pencil" : "bi-plus-circle") text-success"></i> @(IsEdit ? "تعديل الحصة" : "إضافة حصة جديدة")</h3>
+</div>
+
+<div class="row"><div class="col-lg-8">
+    <div class="card shadow-sm"><div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6"><label class="form-label fw-bold">المادة *</label><input class="form-control" @bind="model.Subject" placeholder="رياضيات، فيزياء..." /></div>
+            <div class="col-md-6"><label class="form-label fw-bold">الطالب *</label>
+                <select class="form-select" @bind="model.StudentId"><option value="0">-- اختر طالب --</option>@foreach (var s in Data.Students) { <option value="@s.Id">@s.Name</option> }</select>
+            </div>
+            <div class="col-md-6"><label class="form-label fw-bold">نوع الحصة</label>
+                <select class="form-select" @bind="model.Type"><option value="@LessonType.Weekly">أسبوعي ثابت</option><option value="@LessonType.OneTime">مرة واحدة</option></select>
+            </div>
+            <div class="col-md-6"><label class="form-label fw-bold">اليوم *</label>
+                <select class="form-select" @bind="model.DayOfWeek"><option value="@DayOfWeek.Saturday">السبت</option><option value="@DayOfWeek.Sunday">الأحد</option><option value="@DayOfWeek.Monday">الإثنين</option><option value="@DayOfWeek.Tuesday">الثلاثاء</option><option value="@DayOfWeek.Wednesday">الأربعاء</option><option value="@DayOfWeek.Thursday">الخميس</option><option value="@DayOfWeek.Friday">الجمعة</option></select>
+            </div>
+            <div class="col-md-6"><label class="form-label fw-bold">الوقت *</label><input type="time" class="form-control" @bind="timeValue" /></div>
+            <div class="col-md-6"><label class="form-label fw-bold">المدة (دقيقة)</label><input type="number" class="form-control" @bind="model.DurationMinutes" min="15" max="300" /></div>
+            <div class="col-12"><label class="form-label fw-bold">ملاحظات</label><textarea class="form-control" @bind="model.Notes" rows="2" placeholder="ملاحظات..."></textarea></div>
+        </div>
+        <div class="d-flex gap-2 mt-4">
+            <button class="btn btn-success" @onclick="Save" disabled="@(model.Subject == "" || model.StudentId == 0)"><i class="bi bi-check-lg"></i> @(IsEdit ? "حفظ" : "إضافة")</button>
+            <a href="lessons" class="btn btn-secondary">رجوع</a>
+        </div>
+    </div></div>
+</div></div>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+    private bool IsEdit => Id.HasValue;
+    private Lesson model = new();
+    private DateTime timeValue = DateTime.Today.AddHours(8);
+
+    protected override void OnInitialized()
+    {
+        if (IsEdit) { model = Data.GetLesson(Id!.Value) ?? new Lesson(); if (TimeSpan.TryParse(model.StartTime, out var t)) timeValue = DateTime.Today.Add(t); }
+        else { model = new Lesson { DurationMinutes = 60 }; }
+    }
+    private async Task Save() { model.StartTime = timeValue.ToString("HH:mm"); if (IsEdit) await Data.UpdateLesson(model); else await Data.AddLesson(model); Nav.NavigateTo("/lessons"); }
+}

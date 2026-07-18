@@ -1,0 +1,17 @@
+@using SchedulerWasm.Client.Layout
+
+<Router AppAssembly="typeof(App).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)" />
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <PageTitle>غير موجود</PageTitle>
+        <LayoutView Layout="typeof(MainLayout)">
+            <div class="text-center py-5">
+                <h3>الصفحة غير موجودة</h3>
+                <a href="/" class="btn btn-primary mt-3">الرئيسية</a>
+            </div>
+        </LayoutView>
+    </NotFound>
+</Router>

@@ -1,0 +1,71 @@
+@page "/schedule"
+@rendermode InteractiveWebAssembly
+@inject DataService Data
+@inject NavigationManager Nav
+
+<PageTitle>الجدول</PageTitle>
+
+<div class="mb-4"><h3><i class="bi bi-table text-primary"></i> جدول الحصص الأسبوعي</h3></div>
+
+@{ var timeSlots = Enumerable.Range(8, 14).ToList();
+   var daysList = new (DayOfWeek day, string name)[] { (DayOfWeek.Saturday,"السبت"),(DayOfWeek.Sunday,"الأحد"),(DayOfWeek.Monday,"الإثنين"),(DayOfWeek.Tuesday,"الثلاثاء"),(DayOfWeek.Wednesday,"الأربعاء"),(DayOfWeek.Thursday,"الخميس"),(DayOfWeek.Friday,"الجمعة") };
+   var conflicts = Data.DetectConflicts(); var conflictIds = conflicts.SelectMany(c => new[] { c.A.Id, c.B.Id }).Distinct().ToHashSet(); var today = DateTime.Today.DayOfWeek; }
+
+<div class="card shadow-sm overflow-auto"><div class="card-body p-0">
+    <table class="table table-bordered mb-0 schedule-table">
+        <thead><tr class="table-dark"><th style="width:80px;" class="text-center align-middle">الوقت</th>@foreach (var d in daysList) { <th class="text-center" style="min-width:130px;">@d.name</th> }</tr></thead>
+        <tbody>
+            @foreach (var hour in timeSlots)
+            {
+                var hourSpan = new TimeSpan(hour, 0, 0); var nextHourSpan = new TimeSpan(hour + 1, 0, 0);
+                <tr>
+                    <td class="text-center align-middle fw-bold bg-light" style="width:80px;"><small>@($"{hour}:00")</small></td>
+                    @foreach (var d in daysList)
+                    {
+                        var cellLessons = Data.Lessons.Where(l => l.Type == LessonType.Weekly && l.DayOfWeek == d.day).Where(l => { var start = TimeSpan.Parse(l.StartTime); var end = start.Add(TimeSpan.FromMinutes(l.DurationMinutes)); return start < nextHourSpan && end > hourSpan; }).ToList();
+                        <td class="schedule-cell @(d.day == today ? "today-col" : "")" style="min-width:130px; vertical-align:top; padding:4px;">
+                            @foreach (var lesson in cellLessons)
+                            {
+                                var end = TimeSpan.Parse(lesson.StartTime).Add(TimeSpan.FromMinutes(lesson.DurationMinutes));
+                                var color = GetColor(lesson.StudentId); var isConflict = conflictIds.Contains(lesson.Id);
+                                <div class="lesson-block @(isConflict ? "has-conflict" : "")" style="background:@color.bg; border-right:4px solid @color.border; color:@color.text; border-radius:8px; padding:6px 8px; margin-bottom:4px; font-size:0.8rem;">
+                                    <div class="fw-bold d-flex justify-content-between align-items-center"><span>@lesson.Subject</span>@if (isConflict) { <span class="badge bg-danger" style="font-size:0.55rem;">تعارض!</span> }</div>
+                                    <div style="opacity:0.85;"><i class="bi bi-person"></i> @Data.GetStudentName(lesson.StudentId)</div>
+                                    <div style="opacity:0.7; font-size:0.7rem;"><i class="bi bi-clock"></i> @lesson.StartTime — @end.ToString(@"hh\:mm") | @lesson.DurationMinutes دقيقة</div>
+                                </div>
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div></div>
+
+<div class="card shadow-sm mt-4"><div class="card-body">
+    <h6 class="mb-3"><i class="bi bi-palette"></i> مفتاح الألوان</h6>
+    <div class="d-flex flex-wrap gap-3">
+        @foreach (var s in Data.Students) { var color = GetColor(s.Id); <div class="d-flex align-items-center gap-2"><div style="width:18px;height:18px;background:@color.bg;border:2px solid @color.border;border-radius:4px;"></div><span>@s.Name</span></div> }
+    </div>
+</div></div>
+
+@if (conflicts.Any())
+{
+    <div class="card shadow-sm mt-3 border-danger"><div class="card-header bg-danger text-white"><i class="bi bi-exclamation-triangle"></i> التعارضات (@conflicts.Count)</div><div class="card-body">
+        @foreach (var c in conflicts)
+        { <div class="d-flex align-items-center gap-2 mb-2 p-2 bg-light rounded flex-wrap"><span class="badge bg-primary">@c.A.Subject</span><span class="fw-bold">@Data.GetStudentName(c.A.StudentId)</span><span class="text-danger fw-bold">تداخل @c.OverlapMinutes دقيقة</span><span class="badge bg-danger">@c.B.Subject</span><span class="fw-bold">@Data.GetStudentName(c.B.StudentId)</span></div> }
+    </div></div>
+}
+
+<style>
+    .schedule-cell { transition: background 0.2s; } .schedule-cell:hover { background: #f8f9fa !important; }
+    .today-col { background: #f0f7ff !important; } .lesson-block:hover { transform: scale(1.03); box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+    .has-conflict { animation: borderPulse 1.5s infinite; } .schedule-table td, .schedule-table th { border-color: #dee2e6 !important; }
+</style>
+
+@code {
+    private (string bg, string border, string text) GetColor(int id) => id switch {
+        1=>("#dbeafe","#3b82f6","#1e3a5f"), 2=>("#dcfce7","#22c55e","#14532d"), 3=>("#fef3c7","#f59e0b","#78350f"),
+        4=>("#f3e8ff","#a855f7","#581c87"), 5=>("#ffe4e6","#f43f5e","#881337"), 6=>("#e0f2fe","#0ea5e9","#0c4a6e"),
+        7=>("#ecfdfd","#14b8a6","#134e4a"), 8=>("#fff7ed","#f97316","#7c2d12"), _=>("#f1f5f9","#64748b","#1e293b") };
+}

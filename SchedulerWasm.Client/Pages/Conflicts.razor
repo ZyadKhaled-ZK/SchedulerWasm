@@ -1,0 +1,37 @@
+@page "/conflicts"
+@rendermode InteractiveWebAssembly
+@inject DataService Data
+
+<PageTitle>التعارضات</PageTitle>
+
+<div class="mb-4"><h3><i class="bi bi-exclamation-triangle text-warning"></i> فحص التعارضات</h3></div>
+
+@{ var conflicts = Data.DetectConflicts(); }
+
+@if (conflicts.Any())
+{
+    <div class="alert alert-danger d-flex align-items-center gap-2 mb-4">
+        <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+        <strong>تم اكتشاف @conflicts.Count تعارضات!</strong> يرجى تعديل المواعيد المتداخلة.
+    </div>
+    <div class="row g-4">
+        @foreach (var (c, idx) in conflicts.Select((c, i) => (c, i)))
+        {
+            <div class="col-lg-6">
+                <div class="card border-danger shadow-sm">
+                    <div class="card-header bg-danger text-white"><i class="bi bi-exclamation-circle"></i> تعارض #@((idx + 1)) — تداخل @c.OverlapMinutes دقيقة</div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-6"><div class="card bg-light"><div class="card-body text-center"><h6 class="text-primary">@c.A.Subject</h6><p class="mb-1"><i class="bi bi-person"></i> @Data.GetStudentName(c.A.StudentId)</p><p class="mb-1"><i class="bi bi-clock"></i> @c.A.StartTime</p><p class="mb-0"><i class="bi bi-hourglass-split"></i> @c.A.DurationMinutes دقيقة</p></div></div></div>
+                            <div class="col-6"><div class="card bg-light"><div class="card-body text-center"><h6 class="text-danger">@c.B.Subject</h6><p class="mb-1"><i class="bi bi-person"></i> @Data.GetStudentName(c.B.StudentId)</p><p class="mb-1"><i class="bi bi-clock"></i> @c.B.StartTime</p><p class="mb-0"><i class="bi bi-hourglass-split"></i> @c.B.DurationMinutes دقيقة</p></div></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="text-center py-5"><i class="bi bi-check-circle-fill text-success" style="font-size:4rem;"></i><h3 class="mt-3 text-success">لا توجد تعارضات!</h3><p class="text-muted">جميع مواعيدك متناسبة.</p></div>
+}

@@ -1,0 +1,35 @@
+@inherits LayoutComponentBase
+
+<button class="btn btn-dark mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('show')">
+    <i class="bi bi-list"></i>
+</button>
+
+<div class="sidebar">
+    <div class="brand">
+        <i class="bi bi-book-half"></i> إدارة الدروس
+    </div>
+    <nav class="nav flex-column mt-3">
+        <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+            <i class="bi bi-speedometer2"></i> لوحة التحكم
+        </NavLink>
+        <NavLink class="nav-link" href="students">
+            <i class="bi bi-people"></i> الطلاب
+        </NavLink>
+        <NavLink class="nav-link" href="lessons">
+            <i class="bi bi-journal-text"></i> الحصص
+        </NavLink>
+        <NavLink class="nav-link" href="schedule">
+            <i class="bi bi-table"></i> الجدول
+        </NavLink>
+        <NavLink class="nav-link" href="calendar">
+            <i class="bi bi-calendar-week"></i> التقويم
+        </NavLink>
+        <NavLink class="nav-link" href="conflicts">
+            <i class="bi bi-exclamation-triangle"></i> التعارضات
+        </NavLink>
+    </nav>
+</div>
+
+<div class="main-content">
+    @Body
+</div>

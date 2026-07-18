@@ -1,0 +1,62 @@
+@page "/lessons"
+@rendermode InteractiveWebAssembly
+@inject DataService Data
+
+<PageTitle>الحصص</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="bi bi-journal-text text-success"></i> إدارة الحصص</h3>
+    <a href="lessons/add" class="btn btn-success"><i class="bi bi-plus-circle"></i> إضافة حصة</a>
+</div>
+
+@{ var conflicts = Data.DetectConflicts(); var conflictIds = conflicts.SelectMany(c => new[] { c.A.Id, c.B.Id }).ToHashSet(); }
+
+@if (conflicts.Any())
+{
+    <div class="alert alert-warning"><i class="bi bi-exclamation-triangle-fill"></i> توجد @conflicts.Count تعارضات. <a href="conflicts" class="alert-link">عرض التفاصيل</a></div>
+}
+
+@if (Data.Lessons.Any())
+{
+    <div class="card shadow-sm"><div class="card-body"><div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-dark"><tr><th>#</th><th>المادة</th><th>الطالب</th><th>النوع</th><th>اليوم</th><th>الوقت</th><th>المدة</th><th>إجراءات</th></tr></thead>
+            <tbody>
+                @foreach (var l in Data.Lessons.Select((l, i) => new { L = l, I = i + 1 }))
+                {
+                    <tr class="@(conflictIds.Contains(l.L.Id) ? "table-warning" : "")">
+                        <td>@l.I</td>
+                        <td><span class="badge bg-success">@l.L.Subject</span></td>
+                        <td>@Data.GetStudentName(l.L.StudentId)</td>
+                        <td><span class="badge @(l.L.Type == LessonType.Weekly ? "bg-primary" : "bg-info")">@(l.L.Type == LessonType.Weekly ? "أسبوعي" : "مرة واحدة")</span></td>
+                        <td>@ArabicDay(l.L.DayOfWeek)</td>
+                        <td><i class="bi bi-clock"></i> @l.L.StartTime</td>
+                        <td>@l.L.DurationMinutes د</td>
+                        <td>
+                            <a href="lessons/edit/@l.L.Id" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
+                            <button class="btn btn-sm btn-danger" @onclick="() => delId = l.L.Id" data-bs-toggle="modal" data-bs-target="#deleteLessonModal"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div></div></div>
+}
+else
+{
+    <div class="text-center py-5"><i class="bi bi-journal-x fs-1 text-muted"></i><h4 class="mt-3 text-muted">لا توجد حصص</h4><a href="lessons/add" class="btn btn-success mt-2">إضافة أول حصة</a></div>
+}
+
+<div class="modal fade" id="deleteLessonModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+        <div class="modal-header bg-danger text-white"><h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> تأكيد الحذف</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">هل أنت متأكد من حذف هذه الحصة؟</div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button><button type="button" class="btn btn-danger" @onclick="DoDelete" data-bs-dismiss="modal">حذف</button></div>
+    </div></div>
+</div>
+
+@code {
+    private int delId;
+    private async Task DoDelete() { await Data.DeleteLesson(delId); StateHasChanged(); }
+    private string ArabicDay(DayOfWeek d) => d switch { DayOfWeek.Saturday => "السبت", DayOfWeek.Sunday => "الأحد", DayOfWeek.Monday => "الإثنين", DayOfWeek.Tuesday => "الثلاثاء", DayOfWeek.Wednesday => "الأربعاء", DayOfWeek.Thursday => "الخميس", DayOfWeek.Friday => "الجمعة", _ => "" };
+}

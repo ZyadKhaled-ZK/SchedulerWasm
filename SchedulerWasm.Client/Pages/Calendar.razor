@@ -1,0 +1,52 @@
+@page "/calendar"
+@rendermode InteractiveWebAssembly
+@inject DataService Data
+
+<PageTitle>التقويم</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="bi bi-calendar-week text-info"></i> التقويم الأسبوعي</h3>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary" @onclick="PrevWeek"><i class="bi bi-chevron-right"></i> السابق</button>
+        <button class="btn btn-outline-primary" @onclick="Today">اليوم</button>
+        <button class="btn btn-outline-secondary" @onclick="NextWeek">التالي <i class="bi bi-chevron-left"></i></button>
+    </div>
+</div>
+
+<div class="alert alert-info mb-3"><i class="bi bi-calendar3"></i> من <strong>@weekStart.ToString("dd/MM/yyyy")</strong> إلى <strong>@weekStart.AddDays(6).ToString("dd/MM/yyyy")</strong></div>
+
+@{ var conflicts = Data.DetectConflicts(); var conflictIds = conflicts.SelectMany(c => new[] { c.A.Id, c.B.Id }).ToHashSet(); }
+
+<div class="row g-3 mb-4">
+    @foreach (var day in allDays)
+    {
+        var dayLessons = Data.Lessons.Where(l => l.Type == LessonType.Weekly && l.DayOfWeek == day.Key).OrderBy(l => l.StartTime).ToList();
+        bool isToday = day.Key == DateTime.Today.DayOfWeek;
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 @(isToday ? "border-primary border-2" : "")">
+                <div class="card-header @(isToday ? "bg-primary text-white" : "bg-light")"><div class="d-flex justify-content-between"><strong>@day.Value</strong><span class="badge @(dayLessons.Any() ? "bg-success" : "bg-secondary")">@dayLessons.Count</span></div></div>
+                <div class="card-body p-2">
+                    @if (dayLessons.Any()) { @foreach (var l in dayLessons) { <div class="lesson-badge @(conflictIds.Contains(l.Id) ? "bg-warning" : "bg-light text-dark") border"><strong>@l.Subject</strong><br /><small>@Data.GetStudentName(l.StudentId)</small><br /><small><i class="bi bi-clock"></i> @l.StartTime - @l.DurationMinutes دقيقة</small></div> } }
+                    else { <div class="text-center text-muted py-3"><small>لا حصص</small></div> }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="card shadow-sm"><div class="card-header bg-dark text-white"><i class="bi bi-list-ul"></i> القائمة التفصيلية</div><div class="card-body"><div class="table-responsive">
+    <table class="table table-hover align-middle"><thead><tr><th>اليوم</th><th>المادة</th><th>الطالب</th><th>الوقت</th><th>المدة</th><th>ملاحظات</th></tr></thead>
+    <tbody>
+        @foreach (var l in Data.Lessons.Where(l => l.Type == LessonType.Weekly).OrderBy(l => (int)l.DayOfWeek).ThenBy(l => l.StartTime))
+        { <tr class="@(conflictIds.Contains(l.Id) ? "table-warning" : "")"><td><strong>@ArabicDay(l.DayOfWeek)</strong></td><td><span class="badge bg-success">@l.Subject</span></td><td>@Data.GetStudentName(l.StudentId)</td><td>@l.StartTime</td><td>@l.DurationMinutes دقيقة</td><td>@(l.Notes == "" ? "-" : l.Notes)</td></tr> }
+    </tbody></table>
+</div></div></div>
+
+@code {
+    private DateTime weekStart = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek);
+    private readonly Dictionary<DayOfWeek, string> allDays = new() { { DayOfWeek.Saturday,"السبت" },{ DayOfWeek.Sunday,"الأحد" },{ DayOfWeek.Monday,"الإثنين" },{ DayOfWeek.Tuesday,"الثلاثاء" },{ DayOfWeek.Wednesday,"الأربعاء" },{ DayOfWeek.Thursday,"الخميس" },{ DayOfWeek.Friday,"الجمعة" } };
+    private void PrevWeek() => weekStart = weekStart.AddDays(-7);
+    private void NextWeek() => weekStart = weekStart.AddDays(7);
+    private void Today() => weekStart = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek);
+    private string ArabicDay(DayOfWeek d) => d switch { DayOfWeek.Saturday=>"السبت",DayOfWeek.Sunday=>"الأحد",DayOfWeek.Monday=>"الإثنين",DayOfWeek.Tuesday=>"الثلاثاء",DayOfWeek.Wednesday=>"الأربعاء",DayOfWeek.Thursday=>"الخميس",DayOfWeek.Friday=>"الجمعة",_=>"" };
+}

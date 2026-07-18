@@ -1,0 +1,63 @@
+@page "/students"
+@rendermode InteractiveWebAssembly
+@inject DataService Data
+
+<PageTitle>الطلاب</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="bi bi-people text-primary"></i> إدارة الطلاب</h3>
+    <a href="students/add" class="btn btn-primary"><i class="bi bi-person-plus"></i> إضافة طالب</a>
+</div>
+
+@if (Data.Students.Any())
+{
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr><th>#</th><th>الاسم</th><th>الهاتف</th><th>الحصص</th><th>ملاحظات</th><th>إجراءات</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in Data.Students.Select((s, i) => new { S = s, I = i + 1 }))
+                        {
+                            <tr>
+                                <td>@s.I</td>
+                                <td><strong>@s.S.Name</strong></td>
+                                <td><i class="bi bi-phone"></i> @(s.S.Phone == "" ? "-" : s.S.Phone)</td>
+                                <td><span class="badge bg-info">@Data.Lessons.Count(l => l.StudentId == s.S.Id) حصة</span></td>
+                                <td>@(s.S.Notes == "" ? "-" : s.S.Notes)</td>
+                                <td>
+                                    <a href="students/edit/@s.S.Id" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
+                                    <button class="btn btn-sm btn-danger" @onclick="() => delId = s.S.Id" data-bs-toggle="modal" data-bs-target="#deleteModal"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="text-center py-5"><i class="bi bi-person-x fs-1 text-muted"></i><h4 class="mt-3 text-muted">لا يوجد طلاب</h4><a href="students/add" class="btn btn-primary mt-2">إضافة أول طالب</a></div>
+}
+
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white"><h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> تأكيد الحذف</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body"><p>هل أنت متأكد من حذف هذا الطالب وجميع حصصه؟</p></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-danger" @onclick="DoDelete" data-bs-dismiss="modal">حذف</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private int delId;
+    private async Task DoDelete() { await Data.DeleteStudent(delId); StateHasChanged(); }
+}
