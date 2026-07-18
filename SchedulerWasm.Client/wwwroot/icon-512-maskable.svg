@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#1a1a2e"/>
+  <text x="256" y="170" font-family="Arial" font-size="130" fill="white" text-anchor="middle">📚</text>
+  <text x="256" y="300" font-family="Arial" font-size="50" fill="#adb5bd" text-anchor="middle">إدارة الدروس</text>
+</svg>
